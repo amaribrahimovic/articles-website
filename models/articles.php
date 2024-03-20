@@ -55,4 +55,56 @@ class Article
         }
         return null;
     }
+
+    public static function findByUserId($user_id)
+    {
+        $db = Db::getInstance();
+        $query = "SELECT * FROM articles WHERE user_id = '$user_id';";
+        $result = $db->query($query);
+
+        $articles = [];
+        while ($article = $result->fetch_object()) {
+            $articles[] = new Article($article->id, $article->title, $article->abstract, $article->text, $article->date, $article->user_id);
+        }
+        return $articles;
+    }
+
+    public static function create($title, $abstract, $text, $user_id)
+    {
+        $db = Db::getInstance();
+        $query = "INSERT INTO articles (title, abstract, text, date, user_id) VALUES ('$title', '$abstract', '$text', NOW(), '$user_id');";
+        $result = $db->query($query);
+
+        if ($result) {
+            return $db->insert_id; // vrne id novega articla
+        } else {
+            return false;
+        }
+    }
+
+    public static function update($id, $title, $abstract, $text)
+    {
+        $db = Db::getInstance();
+        $query = "UPDATE articles SET title = '$title', abstract = '$abstract', text = '$text' WHERE id = '$id';";
+        $result = $db->query($query);
+
+        if ($result) {
+            return $result;
+        } else {
+            return false;
+        }
+    }
+
+    public static function deleteById($id)
+    {
+        $db = Db::getInstance();
+        $query = "DELETE FROM articles WHERE id = '$id';";
+        $result = $db->query($query);
+
+        if ($result) {
+            return $result;
+        } else {
+            return false;
+        }
+    }
 }

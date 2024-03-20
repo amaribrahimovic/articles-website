@@ -25,6 +25,15 @@ class articles_controller
         require_once('views/articles/index.php');
     }
 
+    public function list()
+    {
+        $user_id = $_SESSION['USER_ID'];
+
+        $articles = Article::findByUserId($user_id);
+        
+        require_once('views/articles/index.php');
+    }
+
     public function show()
     {
         //preverimo, če je uporabnik podal informacijo, o oglasu, ki ga želi pogledati
@@ -43,34 +52,75 @@ class articles_controller
 
     public function store()
     {
-        // Check if the form was submitted via POST
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // Retrieve form data
-            $title = $_POST['title'] ?? '';
-            $content = $_POST['content'] ?? '';
+            $title = $_POST['title'];
+            $abstract = $_POST['abstract'];
+            $text = $_POST['text'];
+            $user_id = $_SESSION['USER_ID'];
 
-            // Validate form data (you may add more validation logic here)
-            if (empty($title) || empty($content)) {
-                // Handle validation errors (for example, redirect back to the form with an error message)
-                // You may also want to display error messages on the form itself
-                header('Location: /articles/create?error=empty_fields');
+            $article_id = Article::create($title, $abstract, $text, $user_id);
+
+            if ($article_id) {
+                header('Location: /articles/index');
                 exit;
+            } else {
+                return call('pages', 'error'); //če ne, kličemo akcijo napaka na kontrolerju stran
             }
-
-            // Create a new Article instance
-            $article = new Article();
-            $article->setTitle($title);
-            $article->setContent($content);
-
-            // Save the new article to the database
-            $article->save();
-
-            // Redirect the user to a relevant page
-            header('Location: /articles/show?id=' . $article->getId());
-            exit;
         } else {
-            // If the form was not submitted via POST, redirect to the 'create' action
             header('Location: /articles/create');
+            exit;
+        }
+    }
+
+    public function edit()
+    {
+        if (!isset($_GET['id'])) {
+            return call('pages', 'error'); //če ne, kličemo akcijo napaka na kontrolerju stran
+        }
+        $article_id = $_GET['id'];
+
+        $article = Article::find($article_id);
+
+        require_once('views/articles/edit.php');
+    }
+
+    public function update()
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $id = $_POST['id'];
+            $title = $_POST['title'];
+            $abstract = $_POST['abstract'];
+            $text = $_POST['text'];
+
+            $result = Article::update($id, $title, $abstract, $text);
+
+            if ($result) {
+                header('Location: /articles/list');
+                exit;
+            } else {
+                return call('pages', 'error'); //če ne, kličemo akcijo napaka na kontrolerju stran
+            }
+        } else {
+            header('Location: /articles/list');
+            exit;
+        }
+    }
+
+    public function delete()
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $article_id = $_POST['article_id'];
+
+            $result = Article::deleteById($article_id);
+
+            if ($result) {
+                header('Location: /articles/list');
+                exit;
+            } else {
+                return call('pages', 'error'); //če ne, kličemo akcijo napaka na kontrolerju stran
+            }
+        } else {
+            header('Location: /articles/list');
             exit;
         }
     }
